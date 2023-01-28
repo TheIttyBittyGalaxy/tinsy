@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				background: black;
+				color: white;
+				padding: 0;
+				margin: 0;
+				display: flex;
+				flex-direction: row;
+			}
+
+			body > div {
+				width: 100%;
+				height: 100vh;
+				overflow-y: scroll;
+				margin: 0;
+				padding: 12px;
+
+				white-space: pre;
+				font-family: monospace;
+				font-size: 14px;
+				line-height: 1.2rem;
+
+				box-shadow: inset 0 0 8px 0 black;
+				scrollbar-width: thin;
+			}
+
+			#model.error {
+				background: rgb(49, 37, 37);
+				font-size: 20px;
+				white-space: normal;
+				font-family: sans-serif;
+				line-height: 1.5em;
+			}
+
+			#input,
+			#output {
+				background: rgb(37, 37, 49);
+			}
+		</style>
+	</head>
+	<body>
+		<div id="input"></div>
+		<div id="model"></div>
+		<div id="output"></div>
+	</body>
+	<script src="generate.js"></script>
+	<script>
+		data = {
+			title: "Example game",
+			palettes: [
+				{
+					name: "blueprint",
+					background: "rgb(0, 82, 204)",
+					tiles: "rgb(128, 159, 255)",
+					sprites: "rgb(255, 255, 255)",
+				},
+			],
+			rooms: [
+				{
+					name: "Example room",
+					palette: "blueprint",
+					tiles: [
+						{
+							texture: "wall",
+							solid: true,
+							symbol: "w",
+						},
+						{
+							texture: "floor",
+							solid: false,
+							symbol: "_",
+						},
+					],
+					layout: [
+						"________________",
+						"_wwwwwwwwwwwwww_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_w____________w_",
+						"_wwwwwwwwwwwwww_",
+						"________________",
+					],
+					sprites: {
+						player: {
+							texture: "human",
+							x: 5,
+							y: 5,
+						},
+						cat: {
+							texture: "cat",
+							x: 8,
+							y: 12,
+							dialogue: ["I'm a cat"],
+						},
+					},
+				},
+			],
+		};
+
+		const parser = new Parser();
+		const result = parser.parse(data);
+
+		const input_div = document.getElementById("input");
+		const model_div = document.getElementById("model");
+		const output_div = document.getElementById("output");
+
+		input_div.textContent = JSON.stringify(data, null, 2);
+		if (result.success) {
+			model_div.textContent = JSON.stringify(
+				{
+					title: result.content.title,
+					textures: result.content.textures,
+					tiles: result.content.tiles,
+					rooms: result.content.rooms,
+					sprites: result.content.sprites,
+					palettes: result.content.palettes,
+				},
+				null,
+				2
+			);
+			output_div.textContent = parser.generate({
+				wall: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
+				floor: "00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000",
+			});
+		} else {
+			model_div.classList.add("error");
+			model_div.textContent = result.content;
+		}
+	</script>
+</html>

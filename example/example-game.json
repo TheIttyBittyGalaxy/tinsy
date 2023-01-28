@@ -1,0 +1,60 @@
+{
+	"title": "Example game",
+	"palettes": [
+		{
+			"name": "blueprint",
+			"background": "rgb(0, 82, 204)",
+			"tiles": "rgb(128, 159, 255)",
+			"sprites": "rgb(255, 255, 255)"
+		}
+	],
+	"rooms": [
+		{
+			"name": "Example room",
+			"palette": "blueprint",
+			"tiles": [
+				{
+					"texture": "wall",
+					"solid": true,
+					"symbol": "w"
+				},
+				{
+					"texture": "floor",
+					"solid": false,
+					"symbol": "_"
+				}
+			],
+			"layout": [
+				"________________",
+				"_wwwwwwwwwwwwww_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_w____________w_",
+				"_wwwwwwwwwwwwww_",
+				"________________"
+			],
+			"sprites": {
+				"player": {
+					"texture": "human",
+					"x": 5,
+					"y": 5
+				},
+				"cat": {
+					"texture": "cat",
+					"x": 8,
+					"y": 12,
+					"dialogue": ["I'm a cat"]
+				}
+			}
+		}
+	]
+}
