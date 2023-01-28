@@ -9,6 +9,7 @@ class Parser {
 	next_room = 0;
 	next_tile = 0;
 	next_sprite = 0;
+	next_dialogue = 0;
 
 	parse(schema) {
 		this.game = new Game();
@@ -174,7 +175,7 @@ class Parser {
 			let sprite = new Sprite();
 
 			if (!this.verify_is_object(schema, path)) continue;
-			this.verify_no_extra_fields(schema, path, ["texture", "x", "y"]);
+			this.verify_no_extra_fields(schema, path, ["texture", "x", "y", "dialogue"]);
 
 			if (!this.verify_is_string(schema.name, `${path}.name`)) return;
 			const name = schema.name;
@@ -192,12 +193,19 @@ class Parser {
 				sprite.id = "A";
 			} else {
 				sprite.id = this.get_next_sprite();
-				sprite.name = `${room.name} - ${name}`;
+				sprite.name = `${name} (${room.name})`;
 			}
 
 			sprite.room = room.id;
 			if (this.verify_is_position(schema.x, `${path}.x`)) sprite.x = schema.x;
 			if (this.verify_is_position(schema.y, `${path}.y`)) sprite.y = schema.y;
+
+			if (schema.dialogue)
+				sprite.dialogue = this.parse_dialogue(
+					schema.dialogue,
+					`${path}.dialogue`,
+					sprite
+				).id;
 
 			this.game.sprites.push(sprite);
 
@@ -219,6 +227,25 @@ class Parser {
 			}
 		}
 		return tiles;
+	}
+
+	parse_dialogue(list_schema, list_path, sprite) {
+		if (!this.verify_is_array(list_schema, list_path)) return;
+
+		const dialogue = new Dialogue();
+		dialogue.name = sprite.name;
+		dialogue.id = this.get_next_dialogue();
+
+		for (let i = 0; i < list_schema.length; i++) {
+			const speech = list_schema[i];
+			this.verify_is_string(speech, `${list_path}[${i}]`);
+			dialogue.list.push(speech);
+		}
+
+		this.game.dialogues.push(dialogue);
+		this.declare(this.game.lookup.dialogues, dialogue);
+
+		return dialogue;
 	}
 
 	declare(lookup_table, obj) {
@@ -295,6 +322,12 @@ class Parser {
 		return id;
 	}
 
+	get_next_dialogue() {
+		const id = this.next_dialogue.toString(36);
+		this.next_dialogue++;
+		return id;
+	}
+
 	// GENERATE GAME
 
 	generate(textures) {
@@ -356,8 +389,16 @@ class Parser {
 			print(`SPR ${sprite.id}`);
 			print(textures[sprite.texture]);
 			if (sprite.name) print(`NAME ${sprite.name}`);
+			if (sprite.dialogue) print(`DLG ${sprite.dialogue}`);
 			print(`POS ${sprite.room} ${sprite.x},${sprite.y}`);
 			print();
+		}
+
+		// DIALOGUES
+		for (const dialogue of game.dialogues) {
+			print(`DLG ${dialogue.id}`);
+			print(dialogue.list.join("{pg}"));
+			print(`NAME ${dialogue.name}`);
 		}
 
 		return data;

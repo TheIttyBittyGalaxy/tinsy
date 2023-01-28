@@ -6,4 +6,5 @@ class Sprite {
 	room;
 	x = 0;
 	y = 0;
+	dialogue;
 }

@@ -4,6 +4,7 @@ class Game {
 	rooms = [];
 	tiles = [];
 	sprites = [];
+	dialogues = [];
 
 	// name -> id
 	lookup = {
@@ -11,5 +12,6 @@ class Game {
 		rooms: {},
 		tiles: {},
 		sprites: {},
+		dialogues: {},
 	};
 }
