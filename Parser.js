@@ -139,7 +139,7 @@ class Parser {
 				tile.code = name.charAt(0);
 				// FIXME: Create a code for the tile
 				tile.texture = texture;
-				tile.solid = solid;
+				tile.wall = solid;
 
 				this.game.tiles.push(tile);
 				this.declare(this.game.lookup.tiles, tile);
@@ -158,7 +158,7 @@ class Parser {
 			for (let j = 0; j < 16; j++) {
 				const symbol = row[j];
 				tiles += tile_lookup[symbol];
-				tiles += j == 15 ? "\n" : ",";
+				if (!(i == 15 && j == 15)) tiles += j == 15 ? "\n" : ",";
 			}
 		}
 		return tiles;
@@ -209,13 +209,19 @@ class Parser {
 	// GENERATE GAME
 
 	generate(textures) {
+		const game = this.game;
 		let data = "";
-		function print(line) {
-			data += (line || "") + "\n";
+
+		function write(str) {
+			data += str;
+		}
+
+		function print(str) {
+			data += (str || "") + "\n";
 		}
 
 		// FRONT MATTER
-		print(this.model.title);
+		print(game.title);
 		print();
 
 		print("# BITSY VERSION 8.4");
@@ -229,41 +235,29 @@ class Parser {
 		print();
 
 		// PALETTES
-		function print_color(c) {
-			print(c.r + "," + c.g + "," + c.b);
-		}
-
-		for (let i = 0; i < this.model.palettes.length; i++) {
-			const palette = this.model.palettes[i];
-			print("PAL " + i);
-			print_color(palette.background);
-			print_color(palette.tiles);
-			print_color(palette.sprites);
-			print("NAME " + palette.name);
+		for (const palette of game.palettes) {
+			print(`PAL ${palette.code}`);
+			print(`${palette.background.r},${palette.background.g},${palette.background.b}`);
+			print(`${palette.tiles.r},${palette.tiles.g},${palette.tiles.b}`);
+			print(`${palette.sprites.r},${palette.sprites.g},${palette.sprites.b}`);
+			print(`NAME ${palette.name}`);
 			print();
 		}
 
 		// ROOMS
-		for (let i = 0; i < this.model.rooms.length; i++) {
-			const room = this.model.rooms[i];
-			print("ROOM " + i);
-			for (let i = 0; i < 256; i++) {
-				data += room.tiles[i].toString(36);
-				if (i % 16 == 15) print();
-				else data += ",";
-			}
-			print("NAME " + room.name);
-			print("PAL " + this.model.palette_lookup[room.palette].index);
+		for (const room of game.rooms) {
+			print(`ROOM ${room.code}`);
+			print(room.tiles);
+			print(`NAME ${room.name}`);
+			print(`PAL ${room.palette}`);
 			print();
 		}
 
 		// TILES
-		for (let i = 1; i < this.model.tiles.length; i++) {
-			const tile = this.model.tiles[i];
-			console.log(i, tile);
-			print("TIL " + tile.index.toString(36));
+		for (const tile of game.tiles) {
+			print(`TIL ${tile.code}`);
 			print(textures[tile.texture]);
-			print("NAME " + tile.name);
+			print(`NAME ${tile.name}`);
 			if (tile.wall) print("WAL true");
 			print();
 		}

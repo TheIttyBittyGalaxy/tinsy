@@ -80,10 +80,10 @@ if (success) {
 		null,
 		2
 	);
-	// output_div.textContent = parser.generate({
-	// 	wall: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
-	// 	floor: "00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000",
-	// });
+	output_div.textContent = parser.generate({
+		wall: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
+		floor: "00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000",
+	});
 } else {
 	model_div.classList.add("error");
 	model_div.textContent = success.content;
