@@ -54,6 +54,13 @@ class Parser {
 				this.declare(game.lookup.rooms, room);
 			}
 		}
+
+		// Replace room names in with room ids in exits
+		for (const room of game.rooms) {
+			for (const exit of room.exits) {
+				exit.destination.room = game.lookup.rooms[exit.destination.room];
+			}
+		}
 	}
 
 	parse_palette(schema, path) {
@@ -107,6 +114,8 @@ class Parser {
 
 		const tile_lookup = this.parse_room_tiles(schema.tiles, `${path}.tiles`);
 		room.tiles = this.parse_layout(schema.layout, `${path}.layout`, tile_lookup);
+
+		room.exits = this.parse_room_exits(schema.exits, `${path}.exits`);
 
 		room.id = this.get_next_room();
 		this.parse_room_sprites(schema.sprites, `${path}.sprites`, room);
@@ -229,6 +238,40 @@ class Parser {
 		return tiles;
 	}
 
+	parse_room_exits(list_schema, list_path) {
+		if (!this.verify_is_array(list_schema, list_path)) return;
+
+		const exits = [];
+		for (let i = 0; i < list_schema.length; i++) {
+			const schema = list_schema[i];
+			const path = `${list_path}[${i}]`;
+			const exit = new Exit();
+
+			if (
+				!this.verify_is_position(schema.x) ||
+				!this.verify_is_position(schema.y) ||
+				!this.verify_is_object(schema.destination) ||
+				!this.verify_is_position(schema.destination.x) ||
+				!this.verify_is_position(schema.destination.y) ||
+				!this.verify_is_string(schema.destination.room)
+			)
+				continue;
+
+			exit.x = schema.x;
+			exit.y = schema.y;
+			exit.destination = schema.destination;
+			exit.destination.x = schema.destination.x;
+			exit.destination.y = schema.destination.y;
+			exit.destination.room = schema.destination.room; // Room name will be resolved to it's code later
+
+			if (this.verify_is_exit_transition(schema["transition-effect"]))
+				exit.transition = schema["transition-effect"];
+
+			exits.push(exit);
+		}
+		return exits;
+	}
+
 	parse_dialogue(list_schema, list_path, sprite) {
 		if (!this.verify_is_array(list_schema, list_path)) return;
 
@@ -286,6 +329,11 @@ class Parser {
 	}
 
 	verify_is_palette(value, path) {
+		// TODO: Implement
+		return true;
+	}
+
+	verify_is_exit_transition(value, path) {
 		// TODO: Implement
 		return true;
 	}
@@ -371,6 +419,16 @@ class Parser {
 			print(`ROOM ${room.id}`);
 			print(room.tiles);
 			print(`NAME ${room.name}`);
+			for (const exit of room.exits) {
+				write(
+					`EXT ${exit.x},${exit.y} ${exit.destination.room} ${exit.destination.x},${exit.destination.y}`
+				);
+				if (exit.transition) {
+					print(` FX ${exit.transition}`);
+				} else {
+					print();
+				}
+			}
 			print(`PAL ${room.palette}`);
 			print();
 		}

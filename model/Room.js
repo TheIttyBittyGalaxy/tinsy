@@ -3,4 +3,5 @@ class Room {
 	id;
 	palette;
 	tiles = [];
+	exits = [];
 }
