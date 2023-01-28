@@ -60,13 +60,11 @@ class Parser {
 
 		if (this.verify_is_string(schema.name, `${path}.name`)) palette.name = schema.name;
 
-		// FIXME: Create a code for the palette
-
 		palette.background = this.parse_rgb_string(schema.background, `${path}.background`);
 		palette.tiles = this.parse_rgb_string(schema.tiles, `${path}.tiles`);
 		palette.sprites = this.parse_rgb_string(schema.sprites, `${path}.sprites`);
 
-		palette.code = this.get_next_palette();
+		palette.id = this.get_next_palette();
 		return palette;
 	}
 
@@ -106,11 +104,9 @@ class Parser {
 		const tile_lookup = this.parse_room_tiles(schema.tiles, `${path}.tiles`);
 		room.tiles = this.parse_layout(schema.layout, `${path}.layout`, tile_lookup);
 
-		// FIXME: Create a code for the room
-
 		// TODO: Parse sprites
 
-		room.code = this.get_next_room();
+		room.id = this.get_next_room();
 		return room;
 	}
 
@@ -148,17 +144,16 @@ class Parser {
 
 				const tile = new Tile();
 				tile.name = name;
-				tile.code = name.charAt(0);
-				// FIXME: Create a code for the tile
+				tile.id = name.charAt(0);
 				tile.texture = texture;
 				tile.wall = solid;
 
-				tile.code = this.get_next_tile();
+				tile.id = this.get_next_tile();
 
 				this.game.tiles.push(tile);
 				this.declare(this.game.lookup.tiles, tile);
 
-				tile_lookup[symbol] = tile.code;
+				tile_lookup[symbol] = tile.id;
 			}
 		}
 		return tile_lookup;
@@ -185,7 +180,7 @@ class Parser {
 			// TODO: Emit an error
 			return;
 		}
-		lookup_table[name] = obj.code;
+		lookup_table[name] = obj.id;
 	}
 
 	// VERIFY SCHEMA
@@ -220,31 +215,31 @@ class Parser {
 		return true;
 	}
 
-	// GET OBJECT CODE
+	// GET OBJECT ID
 
 	get_next_palette() {
-		const code = this.next_palette.toString(36);
+		const id = this.next_palette.toString(36);
 		this.next_palette++;
-		return code;
+		return id;
 	}
 
 	get_next_room() {
-		const code = this.next_room.toString(36);
+		const id = this.next_room.toString(36);
 		this.next_room++;
-		return code;
+		return id;
 	}
 
 	get_next_tile() {
-		const code = this.next_tile.toString(36);
+		const id = this.next_tile.toString(36);
 		this.next_tile++;
-		return code;
+		return id;
 	}
 
 	get_next_sprite() {
-		const code = this.next_sprite.toString(36);
+		const id = this.next_sprite.toString(36);
 		this.next_sprite++;
-		if (code == "A") return this.get_next_sprite(); // "A" is reserved for the avatar
-		return code;
+		if (id == "A") return this.get_next_sprite(); // "A" is reserved for the avatar
+		return id;
 	}
 
 	// GENERATE GAME
@@ -277,7 +272,7 @@ class Parser {
 
 		// PALETTES
 		for (const palette of game.palettes) {
-			print(`PAL ${palette.code}`);
+			print(`PAL ${palette.id}`);
 			print(`${palette.background.r},${palette.background.g},${palette.background.b}`);
 			print(`${palette.tiles.r},${palette.tiles.g},${palette.tiles.b}`);
 			print(`${palette.sprites.r},${palette.sprites.g},${palette.sprites.b}`);
@@ -287,7 +282,7 @@ class Parser {
 
 		// ROOMS
 		for (const room of game.rooms) {
-			print(`ROOM ${room.code}`);
+			print(`ROOM ${room.id}`);
 			print(room.tiles);
 			print(`NAME ${room.name}`);
 			print(`PAL ${room.palette}`);
@@ -296,7 +291,7 @@ class Parser {
 
 		// TILES
 		for (const tile of game.tiles) {
-			print(`TIL ${tile.code}`);
+			print(`TIL ${tile.id}`);
 			print(textures[tile.texture]);
 			print(`NAME ${tile.name}`);
 			if (tile.wall) print("WAL true");
