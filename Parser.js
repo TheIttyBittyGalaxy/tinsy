@@ -4,9 +4,19 @@ class Parser {
 	game = new Game();
 	errors = [];
 
+	next_palette = 0;
+	next_room = 0;
+	next_tile = 0;
+	next_sprite = 0;
+
 	parse(schema) {
 		this.game = new Game();
 		this.errors = [];
+		this.next_palette = 0;
+		this.next_room = 0;
+		this.next_tile = parseInt("a", 36);
+		this.next_sprite = parseInt("a", 36);
+
 		this.parse_game(schema, "game");
 		return this.errors.length == 0;
 	}
@@ -56,6 +66,7 @@ class Parser {
 		palette.tiles = this.parse_rgb_string(schema.tiles, `${path}.tiles`);
 		palette.sprites = this.parse_rgb_string(schema.sprites, `${path}.sprites`);
 
+		palette.code = this.get_next_palette();
 		return palette;
 	}
 
@@ -99,6 +110,7 @@ class Parser {
 
 		// TODO: Parse sprites
 
+		room.code = this.get_next_room();
 		return room;
 	}
 
@@ -140,6 +152,8 @@ class Parser {
 				// FIXME: Create a code for the tile
 				tile.texture = texture;
 				tile.wall = solid;
+
+				tile.code = this.get_next_tile();
 
 				this.game.tiles.push(tile);
 				this.declare(this.game.lookup.tiles, tile);
@@ -204,6 +218,33 @@ class Parser {
 	verify_no_extra_fields(value, path, fields) {
 		// TODO: Implement
 		return true;
+	}
+
+	// GET OBJECT CODE
+
+	get_next_palette() {
+		const code = this.next_palette.toString(36);
+		this.next_palette++;
+		return code;
+	}
+
+	get_next_room() {
+		const code = this.next_room.toString(36);
+		this.next_room++;
+		return code;
+	}
+
+	get_next_tile() {
+		const code = this.next_tile.toString(36);
+		this.next_tile++;
+		return code;
+	}
+
+	get_next_sprite() {
+		const code = this.next_sprite.toString(36);
+		this.next_sprite++;
+		if (code == "A") return this.get_next_sprite(); // "A" is reserved for the avatar
+		return code;
 	}
 
 	// GENERATE GAME
