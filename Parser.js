@@ -4,6 +4,7 @@ class Parser {
 	game = new Game();
 	errors = [];
 
+	player_declared = false;
 	next_palette = 0;
 	next_room = 0;
 	next_tile = 0;
@@ -12,6 +13,8 @@ class Parser {
 	parse(schema) {
 		this.game = new Game();
 		this.errors = [];
+
+		this.player_declared = false;
 		this.next_palette = 0;
 		this.next_room = 0;
 		this.next_tile = parseInt("a", 36);
@@ -104,17 +107,19 @@ class Parser {
 		const tile_lookup = this.parse_room_tiles(schema.tiles, `${path}.tiles`);
 		room.tiles = this.parse_layout(schema.layout, `${path}.layout`, tile_lookup);
 
-		// TODO: Parse sprites
-
 		room.id = this.get_next_room();
+		this.parse_room_sprites(schema.sprites, `${path}.sprites`, room);
+
 		return room;
 	}
 
-	parse_room_tiles(room_schema, room_path) {
+	parse_room_tiles(list_schema, list_path) {
+		if (!this.verify_is_array(list_schema, list_path)) return;
+
 		const tile_lookup = {};
-		for (let i = 0; i < room_schema.length; i++) {
-			const schema = room_schema[i];
-			const path = `${room_path}[${i}]`;
+		for (let i = 0; i < list_schema.length; i++) {
+			const schema = list_schema[i];
+			const path = `${list_path}[${i}]`;
 
 			if (!this.verify_is_object(schema, path)) continue;
 			this.verify_no_extra_fields(schema, path, ["texture", "solid", "symbol"]);
@@ -159,6 +164,49 @@ class Parser {
 		return tile_lookup;
 	}
 
+	parse_room_sprites(list_schema, list_path, room) {
+		if (!this.verify_is_array(list_schema, list_path)) return;
+
+		for (let i = 0; i < list_schema.length; i++) {
+			const schema = list_schema[i];
+			const path = `${list_path}[${i}]`;
+
+			let sprite = new Sprite();
+
+			if (!this.verify_is_object(schema, path)) continue;
+			this.verify_no_extra_fields(schema, path, ["texture", "x", "y"]);
+
+			if (!this.verify_is_string(schema.name, `${path}.name`)) return;
+			const name = schema.name;
+
+			if (!this.verify_is_string(schema.texture, `${path}.texture`)) return;
+			sprite.texture = schema.texture;
+
+			if (name == "player") {
+				if (this.player_declared) {
+					// FIXME: Emit error
+					continue;
+				}
+				this.player_declared = true;
+				sprite.name = null;
+				sprite.id = "A";
+			} else {
+				sprite.id = this.get_next_sprite();
+				sprite.name = `${room.name} - ${name}`;
+			}
+
+			sprite.room = room.id;
+			if (this.verify_is_position(schema.x, `${path}.x`)) sprite.x = schema.x;
+			if (this.verify_is_position(schema.y, `${path}.y`)) sprite.y = schema.y;
+
+			this.game.sprites.push(sprite);
+
+			// FIXME: Sprite look up doesn't make sense because one name could refer to different sprites
+			//        spread across different rooms. Perhaps sprite look up simply isn't needed?
+			this.declare(this.game.lookup.sprites, sprite);
+		}
+	}
+
 	parse_layout(schema, path, tile_lookup) {
 		// FIXME: Implement error checking on this input
 		let tiles = "";
@@ -201,6 +249,11 @@ class Parser {
 	}
 
 	verify_is_bool(value, path) {
+		// TODO: Implement
+		return true;
+	}
+
+	verify_is_position(value, path) {
 		// TODO: Implement
 		return true;
 	}
@@ -295,6 +348,15 @@ class Parser {
 			print(textures[tile.texture]);
 			print(`NAME ${tile.name}`);
 			if (tile.wall) print("WAL true");
+			print();
+		}
+
+		// SPRITES
+		for (const sprite of game.sprites) {
+			print(`SPR ${sprite.id}`);
+			print(textures[sprite.texture]);
+			if (sprite.name) print(`NAME ${sprite.name}`);
+			print(`POS ${sprite.room} ${sprite.x},${sprite.y}`);
 			print();
 		}
 

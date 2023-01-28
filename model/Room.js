@@ -3,5 +3,4 @@ class Room {
 	id;
 	palette;
 	tiles = [];
-	sprites = [];
 }

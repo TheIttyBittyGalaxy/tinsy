@@ -37,19 +37,21 @@
 				" bbbbbbbbbbbbbb ",
 				"                "
 			],
-			"sprites": {
-				"player": {
+			"sprites": [
+				{
+					"name": "player",
 					"texture": "human",
-					"x": 5,
-					"y": 5
+					"x": 4,
+					"y": 4
 				},
-				"cat": {
+				{
+					"name": "cat",
 					"texture": "cat",
 					"x": 8,
 					"y": 12,
 					"dialogue": ["I'm a cat"]
 				}
-			}
+			]
 		}
 	]
 }

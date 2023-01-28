@@ -37,19 +37,21 @@ let data = {
 				" bbbbbbbbbbbbbb ",
 				"                ",
 			],
-			sprites: {
-				player: {
+			sprites: [
+				{
+					name: "player",
 					texture: "human",
-					x: 5,
-					y: 5,
+					x: 4,
+					y: 4,
 				},
-				cat: {
+				{
+					name: "cat",
 					texture: "cat",
 					x: 8,
 					y: 12,
 					dialogue: ["I'm a cat"],
 				},
-			},
+			],
 		},
 	],
 };
@@ -63,20 +65,11 @@ const output_div = document.getElementById("output");
 
 input_div.textContent = JSON.stringify(data, null, 2);
 if (success) {
-	model_div.textContent = JSON.stringify(
-		{
-			title: parser.game.title,
-			textures: parser.game.textures,
-			tiles: parser.game.tiles,
-			rooms: parser.game.rooms,
-			sprites: parser.game.sprites,
-			palettes: parser.game.palettes,
-		},
-		null,
-		2
-	);
+	model_div.textContent = JSON.stringify(parser.game, null, 2);
 	output_div.textContent = parser.generate({
 		block: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
+		cat: "00000000\n00000000\n01010001\n01110001\n01110010\n01111100\n00111100\n00100100",
+		human: "00011000\n00011000\n00011000\n00111100\n01111110\n10111101\n00100100\n00100100",
 	});
 } else {
 	model_div.classList.add("error");
