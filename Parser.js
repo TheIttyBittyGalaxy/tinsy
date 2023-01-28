@@ -399,6 +399,7 @@ class Parser {
 			print(`DLG ${dialogue.id}`);
 			print(dialogue.list.join("{pg}"));
 			print(`NAME ${dialogue.name}`);
+			print();
 		}
 
 		return data;
