@@ -60,31 +60,31 @@ let data = {
 };
 
 const parser = new Parser();
-const result = parser.parse(data);
+const success = parser.parse(data);
 
 const input_div = document.getElementById("input");
 const model_div = document.getElementById("model");
 const output_div = document.getElementById("output");
 
 input_div.textContent = JSON.stringify(data, null, 2);
-if (result.success) {
+if (success) {
 	model_div.textContent = JSON.stringify(
 		{
-			title: result.content.title,
-			textures: result.content.textures,
-			tiles: result.content.tiles,
-			rooms: result.content.rooms,
-			sprites: result.content.sprites,
-			palettes: result.content.palettes,
+			title: parser.game.title,
+			textures: parser.game.textures,
+			tiles: parser.game.tiles,
+			rooms: parser.game.rooms,
+			sprites: parser.game.sprites,
+			palettes: parser.game.palettes,
 		},
 		null,
 		2
 	);
-	output_div.textContent = parser.generate({
-		wall: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
-		floor: "00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000",
-	});
+	// output_div.textContent = parser.generate({
+	// 	wall: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
+	// 	floor: "00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000",
+	// });
 } else {
 	model_div.classList.add("error");
-	model_div.textContent = result.content;
+	model_div.textContent = success.content;
 }

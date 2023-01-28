@@ -1,249 +1,212 @@
+const rgb_regex = /rgb\((\d+), ?(\d+), ?(\d+)\)/;
+
 class Parser {
-	parse(game) {
-		this.model = {
-			title: "",
-			textures: [],
-			tiles: [],
-			rooms: [],
-			sprites: [],
-			palettes: [],
+	game = new Game();
+	errors = [];
 
-			tile_lookup: {},
-			room_lookup: {},
-			sprite_lookup: {},
-			palette_lookup: {},
-		};
+	parse(schema) {
+		this.game = new Game();
 		this.errors = [];
+		this.parse_game(schema, "game");
+		return this.errors.length == 0;
+	}
 
-		this.model.tiles.push({ null: true }); // The 'null tile'
+	// PARSE SCHEMA
 
-		this.parse_game(game);
+	parse_game(schema, path) {
+		const game = this.game;
 
-		if (this.errors.length > 0) {
-			return {
-				success: false,
-				content: capitalise(
-					(this.errors.length == 1 ? "there is an error " : "there are errors ") +
-						"in the program. " +
-						this.errors.join("\n\n")
-				),
-			};
+		if (!this.verify_is_object(schema, path)) return;
+		this.verify_no_extra_fields(schema, path, ["title", "palettes", "rooms"]);
+
+		if (this.verify_is_string(schema.title, `${path}.title`)) game.title = schema.title;
+
+		const palettes_path = `${path}.palettes`;
+		if (this.verify_is_array(schema.palettes, palettes_path)) {
+			for (let i = 0; i < schema.palettes.length; i++) {
+				const palette_schema = schema.palettes[i];
+				const palette = this.parse_palette(palette_schema, `${palettes_path}[${i}]`);
+				game.palettes.push(palette);
+				this.declare(game.lookup.palettes, palette);
+			}
 		}
 
-		this.model.textures = [...new Set(this.model.textures)];
+		const rooms_path = `${path}.rooms`;
+		if (this.verify_is_array(schema.rooms, rooms_path)) {
+			for (let i = 0; i < schema.rooms.length; i++) {
+				const room_schema = schema.rooms[i];
+				const room = this.parse_room(room_schema, `${rooms_path}[${i}]`);
+				game.rooms.push(room);
+				this.declare(game.lookup.rooms, room);
+			}
+		}
+	}
+
+	parse_palette(schema, path) {
+		const palette = new Palette();
+
+		if (!this.verify_is_object(schema, path)) return;
+		this.verify_no_extra_fields(schema, path, ["name", "background", "tiles", "sprites"]);
+
+		if (this.verify_is_string(schema.name, `${path}.name`)) palette.name = schema.name;
+
+		// FIXME: Create a code for the palette
+
+		palette.background = this.parse_rgb_string(schema.background, `${path}.background`);
+		palette.tiles = this.parse_rgb_string(schema.tiles, `${path}.tiles`);
+		palette.sprites = this.parse_rgb_string(schema.sprites, `${path}.sprites`);
+
+		return palette;
+	}
+
+	parse_rgb_string(str, path) {
+		const match = str.match(rgb_regex);
+
+		if (!match || match.length != 4) {
+			// TODO: Emit an error
+			return;
+		}
+
+		// TODO: Emit an error if any of the values are outside the range 0-255
 
 		return {
-			success: true,
-			content: this.model,
+			r: parseInt(match[1]),
+			g: parseInt(match[2]),
+			b: parseInt(match[3]),
 		};
 	}
 
-	parse_game(game) {
-		if (typeof game != "object") {
-			this.errors.push("the provided input is not a JSON object.");
-			return;
-		} else if (Array.isArray(game)) {
-			this.errors.push("the root object of the program must be a JSON object.");
-			return;
-		}
+	parse_room(schema, path) {
+		const room = new Room();
 
-		const missing_fields = [];
-		const invalid_fields = [];
+		if (!this.verify_is_object(schema, path)) return;
+		this.verify_no_extra_fields(schema, path, [
+			"name",
+			"palette",
+			"tiles",
+			"layout",
+			"sprites",
+		]);
 
-		if (!game.title) {
-			missing_fields.push('a string field "title" that specifies the name of the game');
-		} else {
-			this.model.title = game.title;
-		}
+		if (this.verify_is_string(schema.name, `${path}.name`)) room.name = schema.name;
+		if (this.verify_is_palette(schema.palette, `${path}.palette`))
+			room.palette = schema.palette;
 
-		if (!game.palettes) {
-			missing_fields.push(
-				'an array field "palettes" that stores all of the game\'s colour palettes'
-			);
-		} else {
-			this.parse_palettes(game.palettes);
-		}
+		const tile_lookup = this.parse_room_tiles(schema.tiles, `${path}.tiles`);
+		room.tiles = this.parse_layout(schema.layout, `${path}.layout`, tile_lookup);
 
-		if (!game.rooms) {
-			missing_fields.push('an array field "rooms" that stores all of the game\'s rooms');
-		} else {
-			this.parse_rooms(game.rooms);
-		}
+		// FIXME: Create a code for the room
 
-		for (const key in game) {
-			if (Object.hasOwnProperty.call(game, key)) {
-				if (["title", "palettes", "rooms"].indexOf(key) == -1)
-					invalid_fields.push(`"${key}"`);
-			}
-		}
+		// TODO: Parse sprites
 
-		const missing_count = missing_fields.length;
-		const invalid_count = invalid_fields.length;
-		const error_count = missing_count + invalid_count;
-		if (error_count > 0) {
-			let error = "the root object ";
-
-			if (missing_count > 0) {
-				error += "should have " + join_with_and(missing_fields) + ". ";
-			}
-
-			if (invalid_count > 0) {
-				error +=
-					(missing_count > 0 ? "additionally, it " : "") +
-					"should not have the " +
-					join_with_and(invalid_fields) +
-					(invalid_count == 1 ? " field. " : " fields. ");
-			}
-
-			this.errors.push(error);
-		}
+		return room;
 	}
 
-	parse_palettes(palettes) {
-		if (typeof palettes != "object" || !Array.isArray(palettes)) {
-			this.errors.push("the palettes field should be an array of palette objects.");
-			return;
-		}
+	parse_room_tiles(room_schema, room_path) {
+		const tile_lookup = {};
+		for (let i = 0; i < room_schema.length; i++) {
+			const schema = room_schema[i];
+			const path = `${room_path}[${i}]`;
 
-		for (let i = 0; i < palettes.length; i++) {
-			const palette = palettes[i];
-			this.parse_palette(palette, i);
-		}
-	}
+			if (!this.verify_is_object(schema, path)) continue;
+			this.verify_no_extra_fields(schema, path, ["texture", "solid", "symbol"]);
 
-	parse_palette(palette, i) {
-		if (typeof palette != "object") {
-			this.errors.push(
-				"entry number " + (i + 1) + " of the palettes array is not a palette object."
-			);
-			return;
-		}
+			// FIXME: Verify that symbol is a single character
+			const valid_symbol = this.verify_is_string(schema.symbol, `${path}.symbol`);
+			const valid_texture = this.verify_is_string(schema.texture, `${path}.texture`);
+			const valid_solid = this.verify_is_bool(schema.solid, `${path}.solid`);
 
-		let palette_name = palette.name
-			? `the "${palette.name}" palette`
-			: `palette number ${i + 1}`;
+			if (!valid_symbol || !valid_texture) continue;
 
-		const fields_error = assert_fields(palette, ["name", "background", "tiles", "sprites"]);
-		if (fields_error) this.errors.push(palette_name + fields_error);
-
-		let palette_object = {};
-		palette_object.name = palette_name;
-
-		const invalid_colors = [];
-		const rgb_regex = /rgb\((\d+), ?(\d+), ?(\d+)\)/;
-		for (const color_name of ["background", "tiles", "sprites"]) {
-			const color = palette[color_name];
-			if (!color) continue;
-			const match = color.match(rgb_regex);
-
-			if (!match || match.length != 4) {
-				invalid_colors.push(color_name);
+			const symbol = schema.symbol;
+			if (tile_lookup[symbol]) {
+				// FIXME: Emit an error
 				continue;
 			}
 
-			palette_object[color_name] = {
-				r: parseInt(match[1]),
-				g: parseInt(match[2]),
-				b: parseInt(match[3]),
-			};
-		}
+			if (valid_texture) {
+				const texture = schema.texture;
+				const solid = schema.solid == true;
 
-		// FIXME: throw a meaningful error if there are colours with an invalid syntax
-		// FIXME: throw a meaningful error if any values of an RGB colour fall outside the range 0-255
+				const name = solid ? `${texture} (wall)` : texture;
+				if (this.game.lookup.tiles[name]) {
+					tile_lookup[symbol] = this.game.lookup.tiles[name];
+					continue;
+				}
 
-		if (!palette.name) return;
+				const tile = new Tile();
+				tile.name = name;
+				tile.code = name.charAt(0);
+				// FIXME: Create a code for the tile
+				tile.texture = texture;
+				tile.solid = solid;
 
-		palette_object.name = palette.name;
+				this.game.tiles.push(tile);
+				this.declare(this.game.lookup.tiles, tile);
 
-		if (this.model.palette_lookup[palette.name]) {
-			this.errors.push(
-				`entry number ${i + 1} of the palettes array cannot be named "${
-					palette.name
-				}", as another palette is already using that name.`
-			);
-			return;
-		}
-
-		palette_object.index = Object.keys(this.model.palettes).length;
-		this.model.palettes.push(palette_object);
-		this.model.palette_lookup[palette.name] = palette_object;
-	}
-
-	parse_rooms(rooms) {
-		if (typeof rooms != "object" || !Array.isArray(rooms)) {
-			this.errors.push("the rooms field should be an array of room objects.");
-			return;
-		}
-
-		for (let i = 0; i < rooms.length; i++) {
-			const room = rooms[i];
-			this.parse_room(room, i);
-		}
-	}
-
-	parse_room(room) {
-		if (typeof room != "object") {
-			this.errors.push(
-				"entry number " + (i + 1) + " of the rooms array is not a room object."
-			);
-			return;
-		}
-
-		let room_name = room.name ? `the "${room.name}" room` : `room number ${i + 1}`;
-
-		let room_obj = {};
-
-		// FRONT MATTER
-		room_obj.name = room.name;
-		room_obj.palette = room.palette;
-
-		// FIXME: Throw an error if the palette doesn't exist!
-
-		// TILES
-		let tile_lookup = {};
-		for (let i = 0; i < room.tiles.length; i++) {
-			const tile = room.tiles[i];
-			const tile_obj = this.create_tile(tile);
-			tile_lookup[tile.symbol] = tile_obj;
-
-			// FIXME: Throw error if symbols clash
-			// FIXME: Throw error if symbol is invalid
-		}
-
-		// LAYOUT
-		room_obj.tiles = [];
-		for (let i = 0; i < 16; i++) {
-			const row = room.layout[i];
-			for (let j = 0; j < 16; j++) {
-				const symbol = row[j];
-				const tile = tile_lookup[symbol].index;
-				room_obj.tiles.push(tile);
+				tile_lookup[symbol] = tile.code;
 			}
 		}
-
-		room_obj.index = Object.keys(this.model.rooms).length;
-		this.model.room_lookup[room_name] = room_obj;
-		this.model.rooms.push(room_obj);
+		return tile_lookup;
 	}
 
-	create_tile(tile) {
-		let tile_name = tile.texture + (tile.solid ? " (wall)" : "");
-		if (this.model.tile_lookup[tile_name]) return this.model.tile_lookup[tile_name];
-
-		const tile_obj = {
-			name: tile_name,
-			texture: tile.texture,
-			wall: tile.solid,
-			index: Object.keys(this.model.tiles).length,
-		};
-
-		this.model.tile_lookup[tile_name] = tile_obj;
-		this.model.tiles.push(tile_obj);
-
-		this.model.textures.push(tile.texture);
-
-		return tile_obj;
+	parse_layout(schema, path, tile_lookup) {
+		// FIXME: Implement error checking on this input
+		let tiles = "";
+		for (let i = 0; i < 16; i++) {
+			const row = schema[i];
+			for (let j = 0; j < 16; j++) {
+				const symbol = row[j];
+				tiles += tile_lookup[symbol];
+				tiles += j == 15 ? "\n" : ",";
+			}
+		}
+		return tiles;
 	}
+
+	declare(lookup_table, obj) {
+		const name = obj.name;
+		if (!name) return; // Error will have already been given when the value was found not to have a valid name
+		if (lookup_table[name]) {
+			// TODO: Emit an error
+			return;
+		}
+		lookup_table[name] = obj.code;
+	}
+
+	// VERIFY SCHEMA
+
+	verify_is_object(value, path) {
+		// TODO: Implement
+		return true;
+	}
+
+	verify_is_array(value, path) {
+		// TODO: Implement
+		return true;
+	}
+
+	verify_is_string(value, path) {
+		// TODO: Implement
+		return true;
+	}
+
+	verify_is_bool(value, path) {
+		// TODO: Implement
+		return true;
+	}
+
+	verify_is_palette(value, path) {
+		// TODO: Implement
+		return true;
+	}
+
+	verify_no_extra_fields(value, path, fields) {
+		// TODO: Implement
+		return true;
+	}
+
+	// GENERATE GAME
 
 	generate(textures) {
 		let data = "";
