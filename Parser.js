@@ -102,7 +102,7 @@ class Parser {
 
 		if (this.verify_is_string(schema.name, `${path}.name`)) room.name = schema.name;
 		if (this.verify_is_palette(schema.palette, `${path}.palette`))
-			room.palette = schema.palette;
+			room.palette = this.game.lookup.palettes[schema.palette];
 
 		const tile_lookup = this.parse_room_tiles(schema.tiles, `${path}.tiles`);
 		room.tiles = this.parse_layout(schema.layout, `${path}.layout`, tile_lookup);
