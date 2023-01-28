@@ -1,0 +1,213 @@
+{
+	"title": "Little House",
+	"palettes": [
+		{
+			"name": "outside",
+			"background": "rgb(68, 203, 133)",
+			"tiles": "rgb(255, 227, 135)",
+			"sprites": "rgb(255, 255, 255)"
+		},
+		{
+			"name": "indoors",
+			"background": "rgb(181, 124, 74)",
+			"tiles": "rgb(242, 254, 180)",
+			"sprites": "rgb(255, 255, 255)"
+		}
+	],
+	"rooms": [
+		{
+			"name": "outdoors",
+			"palette": "outside",
+			"tiles": [
+				{
+					"texture": "brick",
+					"solid": true,
+					"symbol": "b"
+				},
+				{
+					"texture": "window",
+					"solid": true,
+					"symbol": "w"
+				},
+				{
+					"texture": "left roof slant",
+					"solid": true,
+					"symbol": "l"
+				},
+				{
+					"texture": "right roof slant",
+					"solid": true,
+					"symbol": "r"
+				},
+				{
+					"texture": "door top",
+					"solid": false,
+					"symbol": "e"
+				},
+				{
+					"texture": "door bottom",
+					"solid": false,
+					"symbol": "f"
+				},
+				{
+					"texture": "grass",
+					"solid": false,
+					"symbol": "g"
+				}
+			],
+			"layout": [
+				"                ",
+				"      g         ",
+				"                ",
+				"          lr    ",
+				"         l  r   ",
+				" g      l w  r  ",
+				"       lbbbbbbr ",
+				"        bbbbwb  ",
+				"        bebbbb  ",
+				"        bfbbbb  ",
+				"     g        g ",
+				"                ",
+				"                ",
+				" g        g     ",
+				"      g         ",
+				"                "
+			],
+			"sprites": [
+				{
+					"name": "player",
+					"texture": "human",
+					"x": 4,
+					"y": 7
+				},
+				{
+					"name": "cat",
+					"texture": "cat",
+					"x": 13,
+					"y": 13,
+					"dialogue": ["You pet the kitten...", "it likes you!"]
+				},
+				{
+					"name": "flowers",
+					"texture": "flowers",
+					"x": 2,
+					"y": 8
+				}
+			],
+			"exits": [
+				{
+					"transition-effect": "tunnel",
+					"x": 9,
+					"y": 9,
+					"destination": {
+						"room": "house",
+						"x": 5,
+						"y": 11
+					}
+				}
+			]
+		},
+		{
+			"name": "house",
+			"palette": "indoors",
+			"tiles": [
+				{
+					"texture": "brick",
+					"solid": true,
+					"symbol": "b"
+				},
+				{
+					"texture": "table",
+					"solid": true,
+					"symbol": "t"
+				},
+				{
+					"texture": "chair",
+					"solid": false,
+					"symbol": "c"
+				},
+				{
+					"texture": "rug",
+					"solid": false,
+					"symbol": "r"
+				},
+				{
+					"texture": "bed top",
+					"solid": true,
+					"symbol": "u"
+				},
+				{
+					"texture": "bed bottom",
+					"solid": true,
+					"symbol": "l"
+				},
+				{
+					"texture": "double bed top left",
+					"solid": true,
+					"symbol": "e"
+				},
+				{
+					"texture": "double bed top right",
+					"solid": true,
+					"symbol": "f"
+				},
+				{
+					"texture": "double bed bottom left",
+					"solid": true,
+					"symbol": "g"
+				},
+				{
+					"texture": "double bed bottom right",
+					"solid": true,
+					"symbol": "h"
+				}
+			],
+			"layout": [
+				"                ",
+				"                ",
+				"                ",
+				"        bbbbb   ",
+				"   bbbbbb efb   ",
+				"   bctc   ghb   ",
+				"   b        b   ",
+				"   b     rr b   ",
+				"   b        b   ",
+				"   b   b bbbb   ",
+				"   b   b   ub   ",
+				"   b   b   lb   ",
+				"   bb bbbbbbb   ",
+				"                ",
+				"                ",
+				"                "
+			],
+			"sprites": [
+				{
+					"name": "kid",
+					"texture": "human child",
+					"x": 9,
+					"y": 6,
+					"dialogue": ["hey! get out my room!"]
+				},
+				{
+					"name": "person",
+					"texture": "human adult",
+					"x": 10,
+					"y": 10,
+					"dialogue": ["well hello there! how are you today?"]
+				}
+			],
+			"exits": [
+				{
+					"transition-effect": "tunnel",
+					"x": 5,
+					"y": 12,
+					"destination": {
+						"room": "outdoors",
+						"x": 9,
+						"y": 10
+					}
+				}
+			]
+		}
+	]
+}
