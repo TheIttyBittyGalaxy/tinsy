@@ -171,7 +171,7 @@ class Parser {
 			const row = schema[i];
 			for (let j = 0; j < 16; j++) {
 				const symbol = row[j];
-				tiles += tile_lookup[symbol];
+				tiles += symbol == " " ? "0" : tile_lookup[symbol];
 				if (!(i == 15 && j == 15)) tiles += j == 15 ? "\n" : ",";
 			}
 		}

@@ -14,33 +14,28 @@ let data = {
 			palette: "blueprint",
 			tiles: [
 				{
-					texture: "wall",
-					solid: true,
-					symbol: "w",
-				},
-				{
-					texture: "floor",
+					texture: "block",
 					solid: false,
-					symbol: "_",
+					symbol: "b",
 				},
 			],
 			layout: [
-				"________________",
-				"_wwwwwwwwwwwwww_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_w____________w_",
-				"_wwwwwwwwwwwwww_",
-				"________________",
+				"                ",
+				" bbbbbbbbbbbbbb ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" b            b ",
+				" bbbbbbbbbbbbbb ",
+				"                ",
 			],
 			sprites: {
 				player: {
@@ -81,8 +76,7 @@ if (success) {
 		2
 	);
 	output_div.textContent = parser.generate({
-		wall: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
-		floor: "00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000\n00000000",
+		block: "11111111\n10000001\n10000001\n10011001\n10011001\n10000001\n10000001\n11111111",
 	});
 } else {
 	model_div.classList.add("error");
