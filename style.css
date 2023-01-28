@@ -1,0 +1,41 @@
+* {
+	box-sizing: border-box;
+}
+
+body {
+	background: black;
+	color: white;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: row;
+}
+
+body > div {
+	width: 100%;
+	height: 100vh;
+	overflow-y: scroll;
+	margin: 0;
+	padding: 12px;
+
+	white-space: pre;
+	font-family: monospace;
+	font-size: 14px;
+	line-height: 1.2rem;
+
+	box-shadow: inset 0 0 8px 0 black;
+	scrollbar-width: thin;
+}
+
+#model.error {
+	background: rgb(49, 37, 37);
+	font-size: 20px;
+	white-space: normal;
+	font-family: sans-serif;
+	line-height: 1.5em;
+}
+
+#input,
+#output {
+	background: rgb(37, 37, 49);
+}
